@@ -9,7 +9,12 @@ param azureFirewallName string = 'azureFirewall'
 param azureFirewallIPName string = 'azureFirewallPublicIP'
 param egressRoutingTableName string = 'udrRoutingTable'
 param appGatewayName string = 'appGateway'
+param bastionName string = 'bastion'
+param bastionIPName string = 'bastionIP'
 param appGatewayIPName string = 'appGatewayPublicIP'
+param vmName string = 'ubuntu-01'
+param adminUsername string = 'localadmin'
+param publicSshKey string
 
 var containerAppsSubnet = {
   name: 'ContainerAppsSubnet'
@@ -33,9 +38,25 @@ var appGatewaySubnet = {
   }
 }
 
+var vmSubnet = {
+  name: 'VMSubnet'
+  properties: {
+    addressPrefix: '10.0.4.0/24'
+  }
+}
+
+var bastionSubnet = {
+  name: 'BastionSubnet'
+  properties: {
+    addressPrefix: '10.0.5.0/24'
+  }
+}
+
 var subnets = [
   appGatewaySubnet
   firewallSubnet
+  vmSubnet
+  bastionSubnet
 ]
 
 // Deploy an Azure Virtual Network 
@@ -46,6 +67,16 @@ module vnetModule 'modules/vnet.bicep' = {
     vnetName: vnetName
     vnetPrefix: vnetPrefix
     subnets: subnets
+  }
+}
+
+module bastionModule 'modules/bastion.bicep' = {
+  name: '${deployment().name}--azureBastion'
+  params: {
+    location: location
+    bastionName: bastionName
+    bastionPublicIpName: bastionIPName
+    subnetId: '${vnetModule.outputs.vnetId}/subnets/${bastionSubnet.name}'
   }
 }
 
@@ -121,5 +152,17 @@ module containerAppModule 'modules/containerapp.bicep' = {
   params: {
     location: location
     containerAppsEnvName: containerAppsEnvName
+  }
+}
+
+module vmModule 'modules/vm.bicep' = {
+  name: '${deployment().name}--vm'
+  params: {
+    location: location
+    adminPublicKey: publicSshKey
+    adminUsername: adminUsername
+    virtualMachineComputerName: vmName
+    virtualMachineName: vmName
+    vmSubnetId: '${vnetModule.outputs.vnetId}/subnets/${vmSubnet.name}'
   }
 }

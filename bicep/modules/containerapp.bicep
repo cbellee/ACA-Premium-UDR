@@ -1,6 +1,6 @@
 param containerAppName string = 'testapp'
 param containerAppsEnvName string 
-param location string = 'northcentralusstage'
+param location string
 
 resource environment 'Microsoft.App/managedEnvironments@2022-06-01-preview' existing = {
   name: containerAppsEnvName

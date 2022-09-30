@@ -19,7 +19,7 @@
       "type": "String"
     },
     "location": {
-      "defaultValue": "centralus",
+      "defaultValue": "australiaeast",
       "type": "String"
     },
     "aks-sp-id": {
